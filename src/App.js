@@ -1,25 +1,75 @@
-import logo from './logo.svg';
-import './App.css';
+import { useState } from 'react'
 
-function App() {
+const App = () => {
+  const [persons, setPersons] = useState([
+    { name: 'Arto Hellas', 
+      phone: '000-111-222'}
+  ]) 
+  const [newName, setNewName] = useState('')
+  const [newPhone, setNewPhone] = useState('')
+
+  const handleChangeName = (event) => {
+    setNewName(event.target.value)
+  }
+
+
+  const handleChangePhone = (event) => {
+    setNewPhone(event.target.value)
+  }
+
+  const arrayToRender = persons.map((person, index) => (
+    <p key={person.name}>{person.name} - {person.phone}</p>
+  ))
+
+
+  const handleSubmit = (event) => {
+    event.preventDefault()
+    
+    if (handleRepeatedValues()) {
+      return
+    }
+
+    const objectToAdd = {
+      name: newName,
+      phone: newPhone,
+    }
+    
+    setPersons(persons.concat(objectToAdd))
+    setNewName("")
+    setNewPhone("")
+  }
+
+
+
+  const handleRepeatedValues = () => {
+    const isItRepeated = persons.filter(person => person.name === newName)
+
+    
+    if(isItRepeated.length !== 0){
+      alert(`${newName} already exist`)
+      return true
+    }
+    return false
+  }
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+    <div>
+      <h2>Phonebook</h2>
+      <form onSubmit={handleSubmit}>
+        <div>
+          Name: <input onChange={handleChangeName} value={newName}/>
+          <br/>
+          Phone: <input onChange={handleChangePhone} value={newPhone}/>
+        </div>
+        <div>
+          <button type="submit">Add</button>
+        </div>
+      </form>
+      <h2>Numbers</h2>
+      <div>{arrayToRender}</div>
+      
     </div>
-  );
+  )
 }
 
-export default App;
+export default App
