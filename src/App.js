@@ -7,19 +7,33 @@ const App = () => {
   ]) 
   const [newName, setNewName] = useState('')
   const [newPhone, setNewPhone] = useState('')
+  const [filter, setFilter] = useState('')
 
   const handleChangeName = (event) => {
     setNewName(event.target.value)
   }
 
+  const filteredArray = persons.filter((persona => {
+     return persona.name.toLowerCase().slice(0, filter.length) === filter.toLowerCase();
+  }))
 
   const handleChangePhone = (event) => {
     setNewPhone(event.target.value)
   }
 
-  const arrayToRender = persons.map((person, index) => (
+  const handleChangeFilter = (event) => {
+    setFilter(event.target.value)
+  }
+
+  const fullArrayToRender = persons.map((person) => (
     <p key={person.name}>{person.name} - {person.phone}</p>
   ))
+
+  const filteredArrayToRender = filteredArray.map((person) => (
+    <p key={person.name}>{person.name} - {person.phone}</p>
+  ))
+
+  const arrayToRender = filteredArray.length === 0 ? fullArrayToRender : filteredArrayToRender;
 
 
   const handleSubmit = (event) => {
@@ -52,9 +66,14 @@ const App = () => {
     return false
   }
 
+
   return (
     <div>
       <h2>Phonebook</h2>
+      FIlter: <input 
+        onChange={handleChangeFilter}
+        value={filter}
+        />
       <form onSubmit={handleSubmit}>
         <div>
           Name: <input onChange={handleChangeName} value={newName}/>
@@ -66,7 +85,7 @@ const App = () => {
         </div>
       </form>
       <h2>Numbers</h2>
-      <div>{arrayToRender}</div>
+      <div>{(filteredArray.length === 0 && filter) ? "No coincidences found" : arrayToRender }</div>
       
     </div>
   )
