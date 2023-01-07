@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import personService from './services/persons'
 import Person from './components/Person'
-import axios from "axios";
+import Notification from "./components/Notification";
 
 const App = () => {
   const [persons, setPersons] = useState([]);
@@ -19,6 +19,7 @@ const App = () => {
   const [newName, setNewName] = useState("");
   const [newPhone, setNewPhone] = useState("");
   const [filter, setFilter] = useState("");
+  const [notification, setNotification] = useState(null)
 
   const handleChangeName = (event) => {
     setNewName(event.target.value);
@@ -60,7 +61,11 @@ const App = () => {
         setPersons(persons.concat(response));
         setNewName("");
         setNewPhone("");
+        setNotification(`${response.name} was addes succesfully`)
       })
+      setTimeout(() => {
+        setNotification(null)
+      }, 3000);
     
   };
 
@@ -68,7 +73,10 @@ const App = () => {
     const isItRepeated = persons.filter((person) => person.name === newName);
 
     if (isItRepeated.length !== 0) {
-      alert(`${newName} already exist`);
+      setNotification(`${newName} already exist`)
+      setTimeout(() => {
+        setNotification(null)
+      }, 3000);;
       return true;
     }
     return false;
@@ -76,15 +84,24 @@ const App = () => {
 
   const deleteNote = (id) => {
     if(window.confirm("Do you really want to delete it ")){
-      const url = `http://localhost:3001/persons/${id}`
       const personToDelete = 
       persons.find(person => person.id === id)
       
       personService
         .deletePerson(id, personToDelete)
-        .then(() => (
+        .then(() => { 
+          setNotification(`${personToDelete.name} was deleted succesfully`)
           setPersons(persons.filter(p => p.id !== id))
-        ))
+    }).catch(
+      error => {
+        setNotification(
+          `${personToDelete.name} was already removed from the server`
+        )
+      }
+    )
+    setTimeout(() => {
+      setNotification(null)
+    }, 3000)
     }
    
 
@@ -93,12 +110,16 @@ const App = () => {
   return (
     <div>
       <h2>Phonebook</h2>
-      Filter: <input onChange={handleChangeFilter} value={filter} />
+      <div className="notification-container">
+        <Notification message={notification}/>
+      </div>
+      <span>Filter:</span> <input onChange={handleChangeFilter} value={filter} />
       <form onSubmit={handleSubmit}>
+        <h2>Add a New Contact</h2>
         <div>
-          Name: <input onChange={handleChangeName} value={newName} />
+         <span>Name:</span> <input onChange={handleChangeName} value={newName} />
           <br />
-          Phone: <input onChange={handleChangePhone} value={newPhone} />
+          <span>Phone: </span><input onChange={handleChangePhone} value={newPhone} />
         </div>
         <div>
           <button type="submit">Add</button>
