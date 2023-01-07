@@ -1,16 +1,20 @@
 import { useState, useEffect } from "react";
+import personService from './services/persons'
+import Person from './components/Person'
 import axios from "axios";
 
 const App = () => {
   const [persons, setPersons] = useState([]);
 
   useEffect(() => {
-    console.log("effect");
-    axios.get("http://localhost:3001/persons").then((response) => {
-      console.log(response);
-      setPersons(response.data);
-    });
+    personService
+      .getAll()
+      .then((response) => {
+        setPersons(response);
+      });
   }, []);
+
+
 
   const [newName, setNewName] = useState("");
   const [newPhone, setNewPhone] = useState("");
@@ -19,52 +23,45 @@ const App = () => {
   const handleChangeName = (event) => {
     setNewName(event.target.value);
   };
-
-  const filteredArray = persons.filter((persona) => {
-    return (
-      persona.name.toLowerCase().slice(0, filter.length) ===
-      filter.toLowerCase()
-    );
-  });
-
   const handleChangePhone = (event) => {
     setNewPhone(event.target.value);
   };
-
   const handleChangeFilter = (event) => {
     setFilter(event.target.value);
   };
 
-  const fullArrayToRender = persons.map((person) => (
-    <p key={person.name}>
-      {person.name} - {person.number}
-    </p>
-  ));
-
-  const filteredArrayToRender = filteredArray.map((person) => (
-    <p key={person.name}>
-      {person.name} - {person.number}
-    </p>
-  ));
-
-  const arrayToRender =
-    filteredArray.length === 0 ? fullArrayToRender : filteredArrayToRender;
-
+  
+  let arrayToShow = []
+  
+  if(filter.length > 0){
+    arrayToShow = persons.filter((persona) => {
+      return (
+        persona.name.toLowerCase().slice(0, filter.length) ===
+        filter.toLowerCase()
+      );
+    });
+  }else{
+    arrayToShow = persons
+  }
+  
   const handleSubmit = (event) => {
     event.preventDefault();
-
     if (handleRepeatedValues()) {
       return;
     }
-
     const objectToAdd = {
       name: newName,
       number: newPhone,
     };
 
-    setPersons(persons.concat(objectToAdd));
-    setNewName("");
-    setNewPhone("");
+    personService
+      .create(objectToAdd)
+      .then(response => {
+        setPersons(persons.concat(response));
+        setNewName("");
+        setNewPhone("");
+      })
+    
   };
 
   const handleRepeatedValues = () => {
@@ -77,10 +74,26 @@ const App = () => {
     return false;
   };
 
+  const deleteNote = (id) => {
+    if(window.confirm("Do you really want to delete it ")){
+      const url = `http://localhost:3001/persons/${id}`
+      const personToDelete = 
+      persons.find(person => person.id === id)
+      
+      personService
+        .deletePerson(id, personToDelete)
+        .then(() => (
+          setPersons(persons.filter(p => p.id !== id))
+        ))
+    }
+   
+
+  }
+
   return (
     <div>
       <h2>Phonebook</h2>
-      FIlter: <input onChange={handleChangeFilter} value={filter} />
+      Filter: <input onChange={handleChangeFilter} value={filter} />
       <form onSubmit={handleSubmit}>
         <div>
           Name: <input onChange={handleChangeName} value={newName} />
@@ -93,9 +106,13 @@ const App = () => {
       </form>
       <h2>Numbers</h2>
       <div>
-        {filteredArray.length === 0 && filter
-          ? "No coincidences found"
-          : arrayToRender}
+        {arrayToShow.map((person) => (
+          <Person 
+            key={person.id} 
+            person={person}
+            deleteNote={() => deleteNote(person.id)}
+            />
+        ))}
       </div>
     </div>
   );
